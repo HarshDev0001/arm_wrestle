@@ -18,7 +18,15 @@ class GameEngine:
         
         self.winner = None
         self.game_state = "PLAYING"
-        self.ai_strength = 0.35  
+        self.ai_strength = 0.35
+
+        # AI surge system
+        self.ai_energy = 0.0
+        self.ai_max_energy = 100.0
+        self.ai_state = "NORMAL"
+        self.ai_state_start = pygame.time.get_ticks()
+        self.ai_surge_duration = 0
+        self.ai_exhausted_duration = 2.0
         
         self.font_big = pygame.font.SysFont(None, 44)
         self.font_med = pygame.font.SysFont(None, 26)
@@ -50,25 +58,72 @@ class GameEngine:
         if self.game_state != "PLAYING":
             return
 
-        ai_variance = random.uniform(0.3, 1.0)
-        self.arm_position += self.ai_strength * ai_variance
+        # AI dynamic surge system
+        current_time = pygame.time.get_ticks()
+        elapsed = (current_time - self.ai_state_start) / 1000.0
 
+        if self.ai_state == "NORMAL":
+            # Slowly build AI energy
+            self.ai_energy = min(
+                self.ai_max_energy,
+                self.ai_energy + 20.0 / 60.0
+            )
+
+            # Trigger a surge when enough energy is available
+            if self.ai_energy >= self.ai_max_energy:
+                self.ai_state = "SURGE"
+                self.ai_state_start = current_time
+                self.ai_surge_duration = random.uniform(1.0, 2.0)
+            else:
+                ai_variance = random.uniform(0.3, 1.0)
+                self.arm_position += self.ai_strength * ai_variance
+
+        elif self.ai_state == "SURGE":
+            # Stronger AI during the surge
+            surge_strength = self.ai_strength * 3.0
+            ai_variance = random.uniform(0.7, 1.0)
+            self.arm_position += surge_strength * ai_variance
+
+            if elapsed >= self.ai_surge_duration:
+                self.ai_state = "EXHAUSTED"
+                self.ai_state_start = current_time
+                self.ai_energy = 0.0
+
+        elif self.ai_state == "EXHAUSTED":
+            # AI is temporarily weaker
+            exhausted_strength = self.ai_strength * 0.3
+            ai_variance = random.uniform(0.3, 0.8)
+            self.arm_position += exhausted_strength * ai_variance
+
+            if elapsed >= self.ai_exhausted_duration:
+                self.ai_state = "NORMAL"
+                self.ai_state_start = current_time
+
+        # Existing player stamina recovery
         if self.stamina < self.max_stamina:
-            self.stamina = min(self.max_stamina, self.stamina + 0.8)
+            self.stamina = min(
+                self.max_stamina,
+                self.stamina + 0.8
+            )
 
+        # Existing win/loss conditions
         if self.arm_position <= -self.target_limit:
             self.winner = "PLAYER"
             self.game_state = "GAME_OVER"
         elif self.arm_position >= self.target_limit:
             self.winner = "COMPUTER"
             self.game_state = "GAME_OVER"
-
     def reset(self):
         self.arm_position = 0.0
         self.stamina = 100.0
         self.last_key = None
         self.winner = None
         self.game_state = "PLAYING"
+
+        self.ai_energy = 0.0
+        self.ai_state = "NORMAL"
+        self.ai_state_start = pygame.time.get_ticks()
+        self.ai_surge_duration = 0
 
     def render(self, screen):
         screen.fill((25, 28, 35))
