@@ -37,12 +37,12 @@ class GameEngine:
             # Adding to arm_position pushes it toward the COMPUTER instead of reducing it to win.
             if event.key == pygame.K_LEFT:
                 if self.last_key != pygame.K_LEFT: 
-                    self.arm_position += 4.2
+                    self.arm_position -= 4.2
                     self.stamina = max(0.0, self.stamina - 2.0)
                     self.last_key = pygame.K_LEFT
             elif event.key == pygame.K_RIGHT:
                 if self.last_key != pygame.K_RIGHT: 
-                    self.arm_position += 4.2
+                    self.arm_position -= 4.2
                     self.stamina = max(0.0, self.stamina - 2.0)
                     self.last_key = pygame.K_RIGHT
 
