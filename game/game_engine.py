@@ -171,6 +171,18 @@ class GameEngine:
         bar_color = (60, 210, 100) if self.stamina > 25 else (220, 60, 60)
         pygame.draw.rect(screen, bar_color, stamina_fill, border_radius=6)
 
+        # Exhaustion warning
+        if self.stamina < 10:
+            # Flash the warning to make it noticeable
+            if (pygame.time.get_ticks() // 300) % 2 == 0:
+                warning_surf = self.font_med.render(
+                    "EXHAUSTED!", True, (255, 60, 60)
+                )
+                screen.blit(
+                    warning_surf,
+                    (400, 445)
+                )
+
         if self.game_state == "GAME_OVER":
             overlay = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
             overlay.fill((0, 0, 0, 200))
